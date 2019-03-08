@@ -13,27 +13,6 @@ import (
 
 type exitRequestError struct{}
 
-type duration struct {
-	hours   int
-	minutes int
-}
-
-func (d duration) isValid() bool {
-	return d.hours != 0 || d.minutes != 0
-}
-
-func (d duration) add(o duration) duration {
-	t := time.Duration(d.hours)*time.Hour + time.Duration(d.minutes)*time.Minute
-	t += time.Duration(o.hours)*time.Hour + time.Duration(o.minutes)*time.Minute
-	h := t / time.Hour
-	m := (t - h*time.Hour) / time.Minute
-	return duration{int(h), int(m)}
-}
-
-func sum(t time.Time, d duration) time.Time {
-	return t.Add(-time.Duration(d.hours)*time.Hour - time.Duration(d.minutes)*time.Minute)
-}
-
 type item struct {
 	time duration
 	name string
@@ -93,30 +72,6 @@ func (t *term) additem(d duration, s string) {
 	t.cmdshow()
 }
 
-func parseduration(s string) (duration, string, error) {
-	var x, y int
-	a := strings.Fields(s)
-	b := strings.SplitN(a[0], ":", 2)
-	desc := ""
-	if len(a) > 1 {
-		desc = a[1]
-	}
-	x, err := strconv.Atoi(b[0])
-	if err != nil {
-		return duration{0, 0}, "", err
-	}
-	if len(b) > 1 {
-		if len(b[1]) > 0 {
-			y, err = strconv.Atoi(b[1])
-			if err != nil {
-				return duration{0, 0}, "", nil
-			}
-		}
-		return duration{x, y}, desc, nil
-	}
-	return duration{0, x}, desc, nil
-}
-
 func (t *term) cmddel(s []string) error {
 	if len(s) == 0 {
 		t.items = t.items[:0]
@@ -143,50 +98,6 @@ func (t *term) cmdshow() error {
 			fmt.Printf("%v-->%v (%v)\n", formattime(t.time), formattime(sum(t.time, total)), total)
 		} else {
 			fmt.Printf("total\t%v\n", total)
-		}
-	}
-	return nil
-}
-
-type customduration struct {
-	name string
-	dur  duration
-	desc string
-}
-
-var customdurations []customduration
-
-func init() {
-	customdurations = []customduration{
-		{"отрадное", duration{0, 30}, "до станции отрадная от дома"},
-		{"кунцево", duration{0, 10}, "от станции кунцево до метро"},
-		{"молодежная", duration{0, 10}, "до молодежной и обратно на кунцевскую"},
-	}
-}
-
-func completeCustomDuration(t string) []string {
-	if len(t) > 0 {
-		s := strings.Fields(t)[0]
-		for _, custom := range customdurations {
-			if strings.HasPrefix(custom.name, s) {
-				return []string{"-" + custom.name}
-			}
-		}
-	}
-	return nil
-}
-
-func showCustomDurations() {
-	fmt.Println("custom durations:")
-	for _, d := range customdurations {
-		fmt.Printf("-%-20s\t%s\n", d.name, d.desc)
-	}
-}
-
-func selectCustomDuration(s string) *customduration {
-	for i := range customdurations {
-		if s == customdurations[i].name {
-			return &customdurations[i]
 		}
 	}
 	return nil
@@ -300,13 +211,4 @@ func main() {
 
 func formattime(t time.Time) string {
 	return t.Format("15:04")
-}
-
-func (d duration) Format(f fmt.State, c rune) {
-	_, ok := f.Width()
-	if ok {
-		fmt.Fprintf(f, "%2d:%02d", d.hours, d.minutes)
-	} else {
-		fmt.Fprintf(f, "%d:%02d", d.hours, d.minutes)
-	}
 }
