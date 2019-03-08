@@ -100,7 +100,7 @@ func parseduration(s string) (time.Duration, string, error) {
 func (t *term) cmddel(s []string) error {
 	if len(s) == 0 {
 		t.items = t.items[:0]
-		fmt.Fprintf(os.Stdout, "all items deleted")
+		fmt.Println("all items deleted")
 		return nil
 	}
 	p, err := strconv.Atoi(s[0])
@@ -159,9 +159,9 @@ func completeCustomDuration(t string) []string {
 }
 
 func showCustomDurations() {
-	fmt.Fprintf(os.Stdout, "custom durations:\n")
+	fmt.Println("custom durations:")
 	for _, d := range customdurations {
-		fmt.Fprintf(os.Stdout, "-%-20s\t%s\n", d.name, d.desc)
+		fmt.Printf("-%-20s\t%s\n", d.name, d.desc)
 	}
 }
 
@@ -235,7 +235,7 @@ func (t *term) Run() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stdout, `		commands:
+	fmt.Printf(`		commands:
 [q]uit
 [e]xit
 [s]how		show full timetable
@@ -267,7 +267,7 @@ func (t *term) close() {
 }
 
 func main() {
-	fmt.Fprintf(os.Stdout, "$ press Enter to show usage\n")
+	fmt.Println("$ press Enter to show usage")
 	newTerm().Run()
 }
 
