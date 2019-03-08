@@ -49,14 +49,13 @@ func (t *term) call(cmdstr string) error {
 }
 
 func (t *term) subtime(s string) error {
-	for _, custom := range customdurations {
-		if s == custom.name {
-			t.additem(custom.dur, custom.desc)
-			return nil
-		}
-	}
 	if s == "" {
 		showCustomDurations()
+		return nil
+	}
+	custom := selectCustomDuration(s)
+	if custom != nil {
+		t.additem(custom.dur, custom.desc)
 		return nil
 	}
 	d, desc, err := parseduration(s)
@@ -128,18 +127,16 @@ func (t *term) cmdshow() error {
 	return nil
 }
 
-var customdurations []struct {
+type customduration struct {
 	name string
 	dur  time.Duration
 	desc string
 }
 
+var customdurations []customduration
+
 func init() {
-	customdurations = []struct {
-		name string
-		dur  time.Duration
-		desc string
-	}{
+	customdurations = []customduration{
 		{"отрадное", time.Duration(30) * time.Minute, "до станции отрадная от дома"},
 		{"кунцево", time.Duration(10) * time.Minute, "от станции кунцево до метро"},
 		{"молодежная", time.Duration(10) * time.Minute, "до молодежной и обратно на кунцевскую"},
@@ -163,6 +160,15 @@ func showCustomDurations() {
 	for _, d := range customdurations {
 		fmt.Printf("-%-20s\t%s\n", d.name, d.desc)
 	}
+}
+
+func selectCustomDuration(s string) *customduration {
+	for i := range customdurations {
+		if s == customdurations[i].name {
+			return &customdurations[i]
+		}
+	}
+	return nil
 }
 
 func (t *term) cmdtime(s []string) error {
