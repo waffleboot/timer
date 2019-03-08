@@ -129,9 +129,9 @@ func init() {
 		dur  time.Duration
 		desc string
 	}{
-		{"отрадное", time.Duration(30) * time.Minute, "до отрадного"},
-		{"кунцево", time.Duration(10) * time.Minute, "от кунцево"},
-		{"молодежная", time.Duration(10) * time.Minute, "до молодежной и обратно"},
+		{"отрадное", time.Duration(30) * time.Minute, "до станции отрадная от дома"},
+		{"кунцево", time.Duration(10) * time.Minute, "от станции кунцево до метро"},
+		{"молодежная", time.Duration(10) * time.Minute, "до молодежной и обратно на кунцевскую"},
 	}
 }
 
@@ -141,6 +141,13 @@ func (t *term) subtime(s string) error {
 			t.addtime(custom.dur, custom.desc)
 			return nil
 		}
+	}
+	if s == "" {
+		fmt.Fprintf(os.Stderr, "custom durations:\n")
+		for _, d := range customdurations {
+			fmt.Fprintf(os.Stderr, "-%-20s\t%s\n", d.name, d.desc)
+		}
+		return nil
 	}
 	d, n, err := parseduration(s)
 	if err != nil {
@@ -190,6 +197,19 @@ func newTerm() *term {
 	}
 }
 
+func usage() {
+	fmt.Fprintf(os.Stderr, `		commands:
+[e]xit
+[s]how		show full timetable
+[d]elete n	delete n-th item
+[t]ime		set timepoint
+-		show custom durations
+-mm		add time interval
+-hh:mm		add time interval
+-name		add custom interval
+`)
+}
+
 func (t *term) Run() {
 	defer t.close()
 	t.line.SetCompleter(func(line string) []string {
@@ -210,6 +230,8 @@ func (t *term) Run() {
 		cmdstr, err := t.promptForInput()
 		if err != nil {
 			return
+		} else if cmdstr == "" {
+			usage()
 		} else if err = t.call(cmdstr); err != nil {
 			if _, ok := err.(exitRequestError); ok {
 				return
@@ -236,5 +258,6 @@ func (t *term) close() {
 }
 
 func main() {
+	fmt.Fprintf(os.Stderr, "$ press Enter to show usage\n")
 	newTerm().Run()
 }
