@@ -241,11 +241,12 @@ func usage() {
 [s]how		show full timetable
 [d]elete	delete all items
 [d]elete n	delete n-th item
-[t]ime hh:mm	set timepoint
+[t]ime hh[:mm]	set timepoint
 -		show custom durations
 -mm		add time interval
--hh:mm		add time interval
+-hh[:mm]	add time interval
 -name		add custom interval
+
 `)
 }
 
