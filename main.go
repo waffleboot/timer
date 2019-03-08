@@ -13,6 +13,8 @@ import (
 
 type exitRequestError struct{}
 
+type duration time.Duration
+
 type item struct {
 	time time.Duration
 	name string
@@ -114,14 +116,14 @@ func (t *term) cmdshow() error {
 	var sum time.Duration
 	if len(t.items) > 0 {
 		for i, s := range t.items {
-			fmt.Printf("%v)\t%v %v\n", i+1, formatduration(s.time), s.name)
+			fmt.Printf("%v)\t%2v %v\n", i+1, duration(s.time), s.name)
 			sum += s.time
 		}
 		fmt.Println("--------------")
 		if !t.time.IsZero() {
-			fmt.Printf("%v-->%v (%v)\n", formattime(t.time), formattime(t.time.Add(-sum)), formatduration(sum))
+			fmt.Printf("%v-->%v (%v)\n", formattime(t.time), formattime(t.time.Add(-sum)), duration(sum))
 		} else {
-			fmt.Printf("total\t%v\n", formatduration(sum))
+			fmt.Printf("total\t%v\n", duration(sum))
 		}
 	}
 	return nil
@@ -281,12 +283,14 @@ func formattime(t time.Time) string {
 	return t.Format("15:04")
 }
 
-func formatduration(d time.Duration) string {
-	h := d / time.Hour
-	m := (d - h*time.Hour) / time.Minute
-	if h == 0 {
-		return fmt.Sprintf("% 2d:%02d", h, m)
+func (t duration) Format(f fmt.State, c rune) {
+	timeduration := time.Duration(t)
+	hours := timeduration / time.Hour
+	minutes := (timeduration - hours*time.Hour) / time.Minute
+	_, ok := f.Width()
+	if ok {
+		fmt.Fprintf(f, "%2d:%02d", hours, minutes)
 	} else {
-		return fmt.Sprintf("%02d:%02d", h, m)
+		fmt.Fprintf(f, "%d:%02d", hours, minutes)
 	}
 }
