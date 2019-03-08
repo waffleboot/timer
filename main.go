@@ -13,10 +13,29 @@ import (
 
 type exitRequestError struct{}
 
-type duration time.Duration
+type duration struct {
+	hours   int
+	minutes int
+}
+
+func (d duration) isValid() bool {
+	return d.hours != 0 || d.minutes != 0
+}
+
+func (d duration) add(o duration) duration {
+	t := time.Duration(d.hours)*time.Hour + time.Duration(d.minutes)*time.Minute
+	t += time.Duration(o.hours)*time.Hour + time.Duration(o.minutes)*time.Minute
+	h := t / time.Hour
+	m := (t - h*time.Hour) / time.Minute
+	return duration{int(h), int(m)}
+}
+
+func sum(t time.Time, d duration) time.Time {
+	return t.Add(-time.Duration(d.hours)*time.Hour - time.Duration(d.minutes)*time.Minute)
+}
 
 type item struct {
-	time time.Duration
+	time duration
 	name string
 }
 
@@ -63,18 +82,18 @@ func (t *term) subtime(s string) error {
 	d, desc, err := parseduration(s)
 	if err != nil {
 		return err
-	} else if d != 0 {
+	} else if d.isValid() {
 		t.additem(d, desc)
 	}
 	return nil
 }
 
-func (t *term) additem(d time.Duration, s string) {
+func (t *term) additem(d duration, s string) {
 	t.items = append(t.items, item{d, s})
 	t.cmdshow()
 }
 
-func parseduration(s string) (time.Duration, string, error) {
+func parseduration(s string) (duration, string, error) {
 	var x, y int
 	a := strings.Fields(s)
 	b := strings.SplitN(a[0], ":", 2)
@@ -84,18 +103,18 @@ func parseduration(s string) (time.Duration, string, error) {
 	}
 	x, err := strconv.Atoi(b[0])
 	if err != nil {
-		return 0, "", err
+		return duration{0, 0}, "", err
 	}
 	if len(b) > 1 {
 		if len(b[1]) > 0 {
 			y, err = strconv.Atoi(b[1])
 			if err != nil {
-				return 0, "", nil
+				return duration{0, 0}, "", nil
 			}
 		}
-		return time.Duration(x)*time.Hour + time.Duration(y)*time.Minute, desc, nil
+		return duration{x, y}, desc, nil
 	}
-	return time.Duration(x) * time.Minute, desc, nil
+	return duration{0, x}, desc, nil
 }
 
 func (t *term) cmddel(s []string) error {
@@ -113,17 +132,17 @@ func (t *term) cmddel(s []string) error {
 }
 
 func (t *term) cmdshow() error {
-	var sum time.Duration
+	var total duration
 	if len(t.items) > 0 {
 		for i, s := range t.items {
-			fmt.Printf("%v)\t%2v %v\n", i+1, duration(s.time), s.name)
-			sum += s.time
+			fmt.Printf("%v)\t%2v %v\n", i+1, s.time, s.name)
+			total = total.add(s.time)
 		}
 		fmt.Println("--------------")
 		if !t.time.IsZero() {
-			fmt.Printf("%v-->%v (%v)\n", formattime(t.time), formattime(t.time.Add(-sum)), duration(sum))
+			fmt.Printf("%v-->%v (%v)\n", formattime(t.time), formattime(sum(t.time, total)), total)
 		} else {
-			fmt.Printf("total\t%v\n", duration(sum))
+			fmt.Printf("total\t%v\n", total)
 		}
 	}
 	return nil
@@ -131,7 +150,7 @@ func (t *term) cmdshow() error {
 
 type customduration struct {
 	name string
-	dur  time.Duration
+	dur  duration
 	desc string
 }
 
@@ -139,9 +158,9 @@ var customdurations []customduration
 
 func init() {
 	customdurations = []customduration{
-		{"отрадное", time.Duration(30) * time.Minute, "до станции отрадная от дома"},
-		{"кунцево", time.Duration(10) * time.Minute, "от станции кунцево до метро"},
-		{"молодежная", time.Duration(10) * time.Minute, "до молодежной и обратно на кунцевскую"},
+		{"отрадное", duration{0, 30}, "до станции отрадная от дома"},
+		{"кунцево", duration{0, 10}, "от станции кунцево до метро"},
+		{"молодежная", duration{0, 10}, "до молодежной и обратно на кунцевскую"},
 	}
 }
 
@@ -283,14 +302,11 @@ func formattime(t time.Time) string {
 	return t.Format("15:04")
 }
 
-func (t duration) Format(f fmt.State, c rune) {
-	timeduration := time.Duration(t)
-	hours := timeduration / time.Hour
-	minutes := (timeduration - hours*time.Hour) / time.Minute
+func (d duration) Format(f fmt.State, c rune) {
 	_, ok := f.Width()
 	if ok {
-		fmt.Fprintf(f, "%2d:%02d", hours, minutes)
+		fmt.Fprintf(f, "%2d:%02d", d.hours, d.minutes)
 	} else {
-		fmt.Fprintf(f, "%d:%02d", hours, minutes)
+		fmt.Fprintf(f, "%d:%02d", d.hours, d.minutes)
 	}
 }
