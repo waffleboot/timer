@@ -43,7 +43,7 @@ func parseduration(s string) (duration, string, error) {
 	b := strings.SplitN(a[0], ":", 2)
 	desc := ""
 	if len(a) > 1 {
-		desc = a[1]
+		desc = strings.Join(a[1:], " ")
 	}
 	x, err := strconv.Atoi(b[0])
 	if err != nil {
