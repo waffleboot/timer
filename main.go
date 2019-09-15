@@ -205,7 +205,7 @@ func (t *term) close() {
 }
 
 func main() {
-	fmt.Println("$ press Enter to show usage")
+	usage()
 	newTerm().Run()
 }
 
