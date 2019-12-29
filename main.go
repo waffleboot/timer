@@ -169,22 +169,6 @@ func (t *term) Run() {
 	}
 }
 
-func printUsage() {
-	fmt.Printf(`		commands:
-[q]uit
-[e]xit
-[s]how		show full timetable
-[d]elete	delete all items
-[d]elete n	delete n-th item
-[t]ime hh[:mm]	set timepoint
--		show custom durations
--mm		add time interval
--hh[:mm]	add time interval
--name		add custom interval
-
-`)
-}
-
 func (t *term) promptForInput() (string, error) {
 	l, err := t.line.Prompt(t.prompt)
 	if err != nil {
@@ -208,4 +192,20 @@ func main() {
 
 func formattime(t time.Time) string {
 	return t.Format("15:04")
+}
+
+func printUsage() {
+	fmt.Printf(`		commands:
+[q]uit
+[e]xit
+[s]how		show full timetable
+[d]elete	delete all items
+[d]elete n	delete n-th item
+[t]ime hh[:mm]	set timepoint
+-		show custom durations
+-mm		add time interval
+-hh[:mm]	add time interval
+-name		add custom interval
+
+`)
 }
