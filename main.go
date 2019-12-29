@@ -162,7 +162,7 @@ func (t *term) Run() {
 		if err != nil {
 			return
 		} else if cmdstr == "" {
-			usage()
+			printUsage()
 		} else if err = t.call(cmdstr); err != nil {
 			if _, ok := err.(exitRequestError); ok {
 				return
@@ -172,7 +172,7 @@ func (t *term) Run() {
 	}
 }
 
-func usage() {
+func printUsage() {
 	fmt.Printf(`		commands:
 [q]uit
 [e]xit
@@ -205,7 +205,7 @@ func (t *term) close() {
 }
 
 func main() {
-	usage()
+	printUsage()
 	newTerm().Run()
 }
 
