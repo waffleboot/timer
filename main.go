@@ -20,10 +20,10 @@ type item struct {
 
 type term struct {
 	line   *liner.State
+	prompt string
 
 	time   time.Time
 	items  []item
-	prompt string
 }
 
 func (t *term) parseCommandText(cmdstr string) error {
@@ -141,8 +141,8 @@ func parsehh(s []string) (time.Time, error) {
 
 func newTerm() *term {
 	return &term{
-		prompt: "$ ",
 		line:   liner.NewLiner(),
+		prompt: "$ ",
 	}
 }
 
