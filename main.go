@@ -3,37 +3,31 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/peterh/liner"
 )
 
-var exitRequestError error = errors.New("")
+var errExitRequest error = errors.New("exit")
 
 type item struct {
 	time duration
 	name string
 }
 
-type term struct {
-	line   *liner.State
-	prompt string
-
-	time   time.Time
-	items  []item
+type timing struct {
+	time  time.Time
+	items []item
 }
 
-func (t *term) parseCommandText(cmdstr string) error {
+func (t *timing) parseCommandText(cmdstr string) error {
 	if strings.HasPrefix(cmdstr, "-") {
 		return t.subtime(cmdstr[1:])
 	}
 	s := strings.Fields(cmdstr)
 	switch s[0] {
 	case "q", "e":
-		return exitRequestError
+		return errExitRequest
 	case "s":
 		return t.cmdshow()
 	case "d":
@@ -45,7 +39,7 @@ func (t *term) parseCommandText(cmdstr string) error {
 	}
 }
 
-func (t *term) subtime(s string) error {
+func (t *timing) subtime(s string) error {
 	if s == "" {
 		showCustomDurations()
 		return nil
@@ -64,12 +58,12 @@ func (t *term) subtime(s string) error {
 	return nil
 }
 
-func (t *term) additem(d duration, s string) {
+func (t *timing) additem(d duration, s string) {
 	t.items = append(t.items, item{d, s})
 	t.cmdshow()
 }
 
-func (t *term) cmddel(s []string) error {
+func (t *timing) cmddel(s []string) error {
 	if len(s) == 0 {
 		t.items = t.items[:0]
 		fmt.Println("all items deleted")
@@ -83,7 +77,7 @@ func (t *term) cmddel(s []string) error {
 	return t.cmdshow()
 }
 
-func (t *term) cmdshow() error {
+func (t *timing) cmdshow() error {
 	var total duration
 	if len(t.items) > 0 {
 		for i, s := range t.items {
@@ -100,7 +94,7 @@ func (t *term) cmdshow() error {
 	return nil
 }
 
-func (t *term) cmdtime(s []string) error {
+func (t *timing) cmdtime(s []string) error {
 	if len(s) > 0 {
 		t.settime(s)
 		t.cmdshow()
@@ -108,7 +102,7 @@ func (t *term) cmdtime(s []string) error {
 	return nil
 }
 
-func (t *term) settime(s []string) error {
+func (t *timing) settime(s []string) error {
 	time, err := parsehhmm(s)
 	if err != nil {
 		return err
@@ -137,61 +131,15 @@ func parsehh(s []string) (time.Time, error) {
 	return time.Parse("15:04", s[0]+":"+s[1])
 }
 
+func formattime(t time.Time) string {
+	return t.Format("15:04")
+}
+
 //-----------------------------------------------------------------------------
-
-func newTerm() *term {
-	return &term{
-		line:   liner.NewLiner(),
-		prompt: "$ ",
-	}
-}
-
-func (t *term) Run() {
-	defer t.close()
-	t.line.SetCompleter(func(line string) []string {
-		if strings.HasPrefix(line, "-") {
-			return completeCustomDuration(strings.TrimSpace(line[1:]))
-		}
-		return nil
-	})
-	for {
-		cmdstr, err := t.promptForInput()
-		if err != nil {
-			return
-		} else if cmdstr == "" {
-			printUsage()
-		} else if err = t.parseCommandText(cmdstr); err != nil {
-			if err == exitRequestError {
-				break
-			}
-			fmt.Fprintf(os.Stderr, "command failed: %s\n", err)
-		}
-	}
-}
-
-func (t *term) promptForInput() (string, error) {
-	l, err := t.line.Prompt(t.prompt)
-	if err != nil {
-		return "", err
-	}
-	l = strings.TrimSuffix(l, "\n")
-	if l != "" {
-		t.line.AppendHistory(l)
-	}
-	return l, nil
-}
-
-func (t *term) close() {
-	t.line.Close()
-}
 
 func main() {
 	printUsage()
-	newTerm().Run()
-}
-
-func formattime(t time.Time) string {
-	return t.Format("15:04")
+	newTerm().Run(&timing{})
 }
 
 func printUsage() {
