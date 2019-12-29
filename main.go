@@ -11,7 +11,7 @@ import (
 	"github.com/peterh/liner"
 )
 
-type exitRequestError struct{}
+var exitRequestError error = errors.New("")
 
 type item struct {
 	time duration
@@ -25,18 +25,14 @@ type term struct {
 	line   *liner.State
 }
 
-func (exitRequestError) Error() string {
-	return ""
-}
-
-func (t *term) call(cmdstr string) error {
+func (t *term) parseCommandText(cmdstr string) error {
 	if strings.HasPrefix(cmdstr, "-") {
 		return t.subtime(cmdstr[1:])
 	}
 	s := strings.Fields(cmdstr)
 	switch s[0] {
 	case "q", "e":
-		return exitRequestError{}
+		return exitRequestError
 	case "s":
 		return t.cmdshow()
 	case "d":
@@ -90,12 +86,12 @@ func (t *term) cmdshow() error {
 	var total duration
 	if len(t.items) > 0 {
 		for i, s := range t.items {
-			fmt.Printf("%v)\t%2v %v\n", i+1, s.time, s.name)
 			total = total.add(s.time)
+			fmt.Printf("%v)\t%2v\t%2v %v\n", i+1, s.time, formattime(sum(t.time, total)), s.name)
 		}
-		fmt.Println("--------------")
+		fmt.Println("---------------------")
 		if !t.time.IsZero() {
-			fmt.Printf("%v-->%v (%v)\n", formattime(t.time), formattime(sum(t.time, total)), total)
+			fmt.Printf("%v-->%v  (%v)\n", formattime(t.time), formattime(sum(t.time, total)), total)
 		} else {
 			fmt.Printf("total\t%v\n", total)
 		}
@@ -163,9 +159,9 @@ func (t *term) Run() {
 			return
 		} else if cmdstr == "" {
 			printUsage()
-		} else if err = t.call(cmdstr); err != nil {
-			if _, ok := err.(exitRequestError); ok {
-				return
+		} else if err = t.parseCommandText(cmdstr); err != nil {
+			if err == exitRequestError {
+				break
 			}
 			fmt.Fprintf(os.Stderr, "command failed: %s\n", err)
 		}
