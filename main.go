@@ -15,12 +15,12 @@ type item struct {
 	name string
 }
 
-type timing struct {
+type timetable struct {
 	time  time.Time
 	items []item
 }
 
-func (t *timing) parseCommandText(cmdstr string) error {
+func (t *timetable) parseCommandText(cmdstr string) error {
 	if strings.HasPrefix(cmdstr, "-") {
 		return t.subtime(cmdstr[1:])
 	}
@@ -39,7 +39,7 @@ func (t *timing) parseCommandText(cmdstr string) error {
 	}
 }
 
-func (t *timing) subtime(s string) error {
+func (t *timetable) subtime(s string) error {
 	if s == "" {
 		showCustomDurations()
 		return nil
@@ -58,12 +58,12 @@ func (t *timing) subtime(s string) error {
 	return nil
 }
 
-func (t *timing) additem(d duration, s string) {
+func (t *timetable) additem(d duration, s string) {
 	t.items = append(t.items, item{d, s})
 	t.cmdshow()
 }
 
-func (t *timing) cmddel(s []string) error {
+func (t *timetable) cmddel(s []string) error {
 	if len(s) == 0 {
 		t.items = t.items[:0]
 		fmt.Println("all items deleted")
@@ -77,7 +77,7 @@ func (t *timing) cmddel(s []string) error {
 	return t.cmdshow()
 }
 
-func (t *timing) cmdshow() error {
+func (t *timetable) cmdshow() error {
 	var total duration
 	if len(t.items) > 0 {
 		for i, s := range t.items {
@@ -94,7 +94,7 @@ func (t *timing) cmdshow() error {
 	return nil
 }
 
-func (t *timing) cmdtime(s []string) error {
+func (t *timetable) cmdtime(s []string) error {
 	if len(s) > 0 {
 		t.settime(s)
 		t.cmdshow()
@@ -102,7 +102,7 @@ func (t *timing) cmdtime(s []string) error {
 	return nil
 }
 
-func (t *timing) settime(s []string) error {
+func (t *timetable) settime(s []string) error {
 	time, err := parsehhmm(s)
 	if err != nil {
 		return err
@@ -139,7 +139,7 @@ func formattime(t time.Time) string {
 
 func main() {
 	printUsage()
-	newTerm().Run(&timing{})
+	newTerm().Run(&timetable{})
 }
 
 func printUsage() {

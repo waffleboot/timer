@@ -20,7 +20,7 @@ func newTerm() *term {
 	}
 }
 
-func (t *term) Run(tg *timing) {
+func (t *term) Run(tt *timetable) {
 	defer t.close()
 	t.line.SetCompleter(func(line string) []string {
 		if strings.HasPrefix(line, "-") {
@@ -34,7 +34,7 @@ func (t *term) Run(tg *timing) {
 			return
 		} else if cmdstr == "" {
 			printUsage()
-		} else if err = tg.parseCommandText(cmdstr); err != nil {
+		} else if err = tt.parseCommandText(cmdstr); err != nil {
 			if err == errExitRequest {
 				break
 			}
