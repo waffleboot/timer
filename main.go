@@ -124,9 +124,8 @@ func parsehh(s []string) (time.Time, error) {
 		t, err := time.Parse("15", s[0])
 		if err != nil {
 			return time.Parse("15:", s[0])
-		} else {
-			return t, err
 		}
+		return t, err
 	}
 	return time.Parse("15:04", s[0]+":"+s[1])
 }
