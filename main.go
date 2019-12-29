@@ -19,10 +19,11 @@ type item struct {
 }
 
 type term struct {
+	line   *liner.State
+
 	time   time.Time
 	items  []item
 	prompt string
-	line   *liner.State
 }
 
 func (t *term) parseCommandText(cmdstr string) error {
