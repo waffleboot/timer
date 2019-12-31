@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,26 @@ type item struct {
 type timetable struct {
 	time  time.Time
 	items []item
+}
+
+type input interface {
+	read() (string, error)
+}
+
+func (t *timetable) run(r input) {
+	for {
+		cmdstr, err := r.read()
+		if err != nil {
+			return
+		} else if cmdstr == "" {
+			printUsage()
+		} else if err = t.parseCommandText(cmdstr); err != nil {
+			if err == errExitRequest {
+				break
+			}
+			fmt.Fprintf(os.Stderr, "command failed: %s\n", err)
+		}
+	}
 }
 
 func (t *timetable) parseCommandText(cmdstr string) error {
@@ -138,7 +159,10 @@ func formattime(t time.Time) string {
 
 func main() {
 	printUsage()
-	newTerm().Run(&timetable{})
+	t := newTerm()
+	defer t.close()
+	var tt timetable
+	tt.run(t)
 }
 
 func printUsage() {

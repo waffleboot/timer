@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/peterh/liner"
@@ -14,33 +12,21 @@ type term struct {
 }
 
 func newTerm() *term {
-	return &term{
+	t := &term{
 		line:   liner.NewLiner(),
 		prompt: "$ ",
 	}
-}
-
-func (t *term) Run(tt *timetable) {
-	defer t.close()
 	t.line.SetCompleter(func(line string) []string {
 		if strings.HasPrefix(line, "-") {
 			return completeCustomDuration(strings.TrimSpace(line[1:]))
 		}
 		return nil
 	})
-	for {
-		cmdstr, err := t.promptForInput()
-		if err != nil {
-			return
-		} else if cmdstr == "" {
-			printUsage()
-		} else if err = tt.parseCommandText(cmdstr); err != nil {
-			if err == errExitRequest {
-				break
-			}
-			fmt.Fprintf(os.Stderr, "command failed: %s\n", err)
-		}
-	}
+	return t
+}
+
+func (t *term) read() (string, error) {
+	return t.promptForInput()
 }
 
 func (t *term) promptForInput() (string, error) {
