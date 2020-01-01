@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/waffleboot/timer/domain"
 	"os"
 	"strconv"
 	"strings"
@@ -11,21 +12,15 @@ import (
 
 var errExitRequest error = errors.New("exit")
 
-type item struct {
-	time duration
-	name string
-}
-
-type timetable struct {
-	time  time.Time
-	items []item
-}
-
 type input interface {
 	read() (string, error)
 }
 
-func (t *timetable) run(r input) {
+type cli struct {
+	service
+}
+
+func (t *cli) run(r input) {
 	for {
 		cmdstr, err := r.read()
 		if err != nil {
@@ -41,7 +36,7 @@ func (t *timetable) run(r input) {
 	}
 }
 
-func (t *timetable) parseCommandText(cmdstr string) error {
+func (t *cli) parseCommandText(cmdstr string) error {
 	if strings.HasPrefix(cmdstr, "-") {
 		return t.subtime(cmdstr[1:])
 	}
@@ -60,7 +55,7 @@ func (t *timetable) parseCommandText(cmdstr string) error {
 	}
 }
 
-func (t *timetable) subtime(s string) error {
+func (t *cli) subtime(s string) error {
 	if s == "" {
 		showCustomDurations()
 		return nil
@@ -70,52 +65,52 @@ func (t *timetable) subtime(s string) error {
 		t.additem(custom.dur, custom.desc)
 		return nil
 	}
-	d, desc, err := parseduration(s)
+	d, desc, err := domain.ParseDuration(s)
 	if err != nil {
 		return err
-	} else if d.isValid() {
+	} else {
 		t.additem(d, desc)
 	}
 	return nil
 }
 
-func (t *timetable) additem(d duration, s string) {
-	t.items = append(t.items, item{d, s})
+func (t *cli) additem(d domain.Duration, s string) {
+	t.Add(d, s)
 	t.cmdshow()
 }
 
-func (t *timetable) cmddel(s []string) error {
+func (t *cli) cmddel(s []string) error {
 	if len(s) == 0 {
-		t.items = t.items[:0]
+		t.Clear()
 		fmt.Println("all items deleted")
 		return nil
 	}
 	p, err := strconv.Atoi(s[0])
-	if err != nil || p < 1 || len(t.items) < p {
+	if err != nil || p < 1 || t.size() < p {
 		return nil
 	}
-	t.items = append(t.items[:p-1], t.items[p:]...)
+	t.Del(p)
 	return t.cmdshow()
 }
 
-func (t *timetable) cmdshow() error {
-	var total duration
-	if len(t.items) > 0 {
-		for i, s := range t.items {
-			total = total.add(s.time)
-			fmt.Printf("%v)\t%2v\t%2v %v\n", i+1, s.time, formattime(sum(t.time, total)), s.name)
-		}
-		fmt.Println("---------------------")
-		if !t.time.IsZero() {
-			fmt.Printf("%v-->%v  (%v)\n", formattime(t.time), formattime(sum(t.time, total)), total)
-		} else {
-			fmt.Printf("total\t%v\n", total)
-		}
+func (t *cli) cmdshow() error {
+	state := t.state()
+	if len(state.items) == 0 {
+		return nil
+	}
+	for i, s := range state.items {
+		fmt.Printf("%v)\t%2v\t%2v %v\n", i+1, s.Duration, formattime(s.Time), s.desc)
+	}
+	fmt.Println("---------------------")
+	if !state.startTime.IsZero() {
+		fmt.Printf("%v-->%v  (%v)\n", formattime(state.startTime), formattime(state.finalTime), state.Duration)
+	} else {
+		fmt.Printf("total\t%v\n", state.Duration)
 	}
 	return nil
 }
 
-func (t *timetable) cmdtime(s []string) error {
+func (t *cli) cmdtime(s []string) error {
 	if len(s) > 0 {
 		t.settime(s)
 		t.cmdshow()
@@ -123,12 +118,12 @@ func (t *timetable) cmdtime(s []string) error {
 	return nil
 }
 
-func (t *timetable) settime(s []string) error {
+func (t *cli) settime(s []string) error {
 	time, err := parsehhmm(s)
 	if err != nil {
 		return err
 	}
-	t.time = time
+	t.service.settime(time)
 	return nil
 }
 
@@ -161,8 +156,7 @@ func main() {
 	printUsage()
 	t := newTerm()
 	defer t.close()
-	var tt timetable
-	tt.run(t)
+	(&cli{}).run(t)
 }
 
 func printUsage() {

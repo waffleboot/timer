@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/waffleboot/timer/domain"
 	"strings"
 )
 
 type customduration struct {
 	name string
-	dur  duration
+	dur  domain.Duration
 	desc string
 }
 
@@ -15,9 +16,9 @@ var customdurations []customduration
 
 func init() {
 	customdurations = []customduration{
-		{"кунцево", duration{0, 10}, "до кунцевской"},
-		{"отрадное", duration{0, 30}, "до отрадного"},
-		{"электричка", duration{0, 21}, "на электричке"},
+		{"кунцево", domain.Duration{0, 10}, "до кунцевской"},
+		{"отрадное", domain.Duration{0, 30}, "до отрадного"},
+		{"электричка", domain.Duration{0, 21}, "на электричке"},
 	}
 }
 
