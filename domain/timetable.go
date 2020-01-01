@@ -22,6 +22,9 @@ func (t *Timetable) Add(d Duration, name string) {
 
 //Del ...
 func (t *Timetable) Del(p int) {
+	if p < 1 || len(t.Items) < p {
+		return
+	}
 	t.Items = append(t.Items[:p-1], t.Items[p:]...)
 }
 

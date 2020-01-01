@@ -3,11 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/waffleboot/timer/domain"
 	"os"
 	"strconv"
 	"strings"
-	"time"
+
+	"github.com/waffleboot/timer/domain"
 )
 
 var errExitRequest error = errors.New("exit")
@@ -68,9 +68,8 @@ func (t *cli) subtime(s string) error {
 	d, desc, err := domain.ParseDuration(s)
 	if err != nil {
 		return err
-	} else {
-		t.additem(d, desc)
 	}
+	t.additem(d, desc)
 	return nil
 }
 
@@ -86,7 +85,7 @@ func (t *cli) cmddel(s []string) error {
 		return nil
 	}
 	p, err := strconv.Atoi(s[0])
-	if err != nil || p < 1 || t.size() < p {
+	if err != nil {
 		return nil
 	}
 	t.Del(p)
@@ -125,29 +124,6 @@ func (t *cli) settime(s []string) error {
 	}
 	t.service.settime(time)
 	return nil
-}
-
-func parsehhmm(s []string) (time.Time, error) {
-	time, err := time.Parse("15:04", s[0])
-	if err != nil {
-		return parsehh(s)
-	}
-	return time, err
-}
-
-func parsehh(s []string) (time.Time, error) {
-	if len(s) == 1 {
-		t, err := time.Parse("15", s[0])
-		if err != nil {
-			return time.Parse("15:", s[0])
-		}
-		return t, err
-	}
-	return time.Parse("15:04", s[0]+":"+s[1])
-}
-
-func formattime(t time.Time) string {
-	return t.Format("15:04")
 }
 
 //-----------------------------------------------------------------------------

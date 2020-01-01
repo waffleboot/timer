@@ -38,14 +38,6 @@ func (s *service) settime(t time.Time) {
 	s.Time = t
 }
 
-func (s *service) add(d domain.Duration, name string) {
-	s.Add(d, name)
-}
-
-func (s *service) clear() {
-	s.Clear()
-}
-
 func (s *service) size() int {
 	return len(s.Items)
 }
