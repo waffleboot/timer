@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/waffleboot/timer/domain"
+	"github.com/waffleboot/timer/service"
 )
 
 var errExitRequest error = errors.New("exit")
@@ -17,7 +18,7 @@ type input interface {
 }
 
 type cli struct {
-	service
+	service.Service
 }
 
 func (t *cli) run(r input) {
@@ -93,16 +94,16 @@ func (t *cli) cmddel(s []string) error {
 }
 
 func (t *cli) cmdshow() error {
-	state := t.state()
-	if len(state.items) == 0 {
+	state := t.State()
+	if len(state.Items) == 0 {
 		return nil
 	}
-	for i, s := range state.items {
-		fmt.Printf("%v)\t%2v\t%2v %v\n", i+1, s.Duration, formattime(s.Time), s.desc)
+	for i, s := range state.Items {
+		fmt.Printf("%v)\t%2v\t%2v %v\n", i+1, s.Duration, formattime(s.Time), s.Desc)
 	}
 	fmt.Println("---------------------")
-	if !state.startTime.IsZero() {
-		fmt.Printf("%v-->%v  (%v)\n", formattime(state.startTime), formattime(state.finalTime), state.Duration)
+	if !state.StartTime.IsZero() {
+		fmt.Printf("%v-->%v  (%v)\n", formattime(state.StartTime), formattime(state.FinalTime), state.Duration)
 	} else {
 		fmt.Printf("total\t%v\n", state.Duration)
 	}
@@ -122,7 +123,7 @@ func (t *cli) settime(s []string) error {
 	if err != nil {
 		return err
 	}
-	t.service.settime(time)
+	t.SetTime(time)
 	return nil
 }
 
