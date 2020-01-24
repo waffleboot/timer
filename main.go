@@ -94,7 +94,7 @@ func (t *cli) cmddel(s []string) error {
 }
 
 func (t *cli) cmdshow() error {
-	state := t.State()
+	state := t.GetCurrentRecords()
 	if len(state.Items) == 0 {
 		return nil
 	}

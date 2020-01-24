@@ -26,8 +26,8 @@ type Service struct {
 	domain.Timetable
 }
 
-//State ...
-func (s *Service) State() DtoList {
+//GetCurrentRecords ...
+func (s *Service) GetCurrentRecords() DtoList {
 	ans := DtoList{Items: make([]DtoItem, 0, len(s.Items))}
 	for _, i := range s.Timetable.Items {
 		ans.Duration = ans.Duration.AddDuration(i.Duration)
