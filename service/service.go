@@ -31,7 +31,7 @@ func (s *Service) State() DtoList {
 	ans := DtoList{Items: make([]DtoItem, 0, len(s.Items))}
 	for _, i := range s.Timetable.Items {
 		ans.Duration = ans.Duration.AddDuration(i.Duration)
-		ans.Items = append(ans.Items, DtoItem{i.Duration, s.Time.Add(ans.TimeDuration()), i.Name})
+		ans.Items = append(ans.Items, DtoItem{i.Duration, s.Time.Add(-ans.TimeDuration()), i.Name})
 	}
 	ans.StartTime = s.Time
 	ans.FinalTime = s.Time.Add(-ans.TimeDuration())
