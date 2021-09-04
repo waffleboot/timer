@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -10,8 +11,6 @@ import (
 	"github.com/waffleboot/timer/domain"
 	"github.com/waffleboot/timer/service"
 )
-
-var errExitRequest error = errors.New("exit")
 
 type input interface {
 	read() (string, error)
@@ -29,8 +28,8 @@ func (t *cli) run(r input) {
 		} else if cmdstr == "" {
 			printUsage()
 		} else if err = t.parseCommandText(cmdstr); err != nil {
-			if err == errExitRequest {
-				break
+			if errors.Is(err, io.EOF) {
+				return
 			}
 			fmt.Fprintf(os.Stderr, "command failed: %s\n", err)
 		}
@@ -44,7 +43,7 @@ func (t *cli) parseCommandText(cmdstr string) error {
 	s := strings.Fields(cmdstr)
 	switch s[0] {
 	case "q", "e":
-		return errExitRequest
+		return io.EOF
 	case "s":
 		return t.cmdshow()
 	case "d":
