@@ -26,19 +26,15 @@ func newTerm() *term {
 }
 
 func (t *term) read() (string, error) {
-	return t.promptForInput()
-}
-
-func (t *term) promptForInput() (string, error) {
-	l, err := t.liner.Prompt(t.prompt)
+	cmd, err := t.liner.Prompt(t.prompt)
 	if err != nil {
 		return "", err
 	}
-	l = strings.TrimSuffix(l, "\n")
-	if l != "" {
-		t.liner.AppendHistory(l)
+	cmd = strings.TrimSuffix(cmd, "\n")
+	if cmd != "" {
+		t.liner.AppendHistory(cmd)
 	}
-	return l, nil
+	return cmd, nil
 }
 
 func (t *term) close() {
